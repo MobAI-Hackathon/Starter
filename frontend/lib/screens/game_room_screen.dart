@@ -64,15 +64,7 @@ class _GameRoomScreenState extends State<GameRoomScreen> with SingleTickerProvid
   Widget _buildGameContent(GameSession session) {
     final currentPlayer = session.players.firstWhere((p) => p.id == widget.userId);
 
-    // Only start the round if we have enough players and the game is in waiting state
-    if (currentPlayer.isDrawing && 
-        session.currentWord == null && 
-        session.players.length >= 2 &&
-        session.state == GameState.waiting) {
-      _gameService.startNewRound(widget.gameId);
-    }
-
-    // Add this section to show waiting message
+    // Show waiting screen only during initial waiting state
     if (session.state == GameState.waiting && session.players.length < 2) {
       return Center(
         child: Column(
@@ -83,12 +75,52 @@ class _GameRoomScreenState extends State<GameRoomScreen> with SingleTickerProvid
               style: TextStyle(fontSize: 24),
             ),
             const SizedBox(height: 16),
-            Text('${session.players.length}/2 players'),
+            Text('${session.players.length}/3 players'),
           ],
         ),
       );
     }
 
+    // Show ready to start screen
+    if (session.state == GameState.waiting && session.players.length >= 2) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Text(
+              'Ready to start!',
+              style: TextStyle(fontSize: 24),
+            ),
+            const SizedBox(height: 16),
+            Text('${session.players.length}/3 players'),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () => _gameService.startGame(widget.gameId),
+              child: const Text('Start Game'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // Show round transition screen
+    if (session.state == GameState.roundEnd) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Text(
+              'Round Complete!',
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 16),
+            const Text('Next round starting soon...'),
+          ],
+        ),
+      );
+    }
+
+    // Main game content
     return Stack(
       children: [
         Container(

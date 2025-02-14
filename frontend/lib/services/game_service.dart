@@ -41,9 +41,21 @@ class GameService {
       if (obj == null) return Transaction.abort();
       
       final game = GameSession.fromJson(Map<String, dynamic>.from(obj as Map));
+      
+      // Check if game is full - only reject if MORE than 3 players try to join
+      if (game.players.length > 3) {
+        throw Exception('Game is full');
+      }
+      
       if (game.players.any((p) => p.id == player.id)) return Transaction.success(obj);
       
       game.players.add(player);
+
+      // If we now have exactly 3 players, update the maxRounds
+      if (game.players.length == 3) {
+        game.maxRounds = 3; // One round per player
+      }
+      
       return Transaction.success(game.toJson());
     });
   }
@@ -143,20 +155,25 @@ class GameService {
     game.players[currentDrawerIndex].isDrawing = false;
     game.players[nextDrawerIndex].isDrawing = true;
 
-    // Update game state
+    // Update game state to roundEnd instead of waiting
     await gameRef.update({
-      'state': GameState.waiting.toString(),
+      'state': GameState.roundEnd.toString(),
       'currentRound': nextRound,
       'players': game.players.map((p) => p.toJson()).toList(),
       'currentWord': null,
       'drawing_data': null,
       'playersGuessedCorrect': [],
-      'roundStartTime': null, // Reset round timer
+      'roundStartTime': null,
     });
 
     // Start new round after a short delay
-    Timer(const Duration(seconds: 3), () {
-      startNewRound(gameId);
+    Timer(const Duration(seconds: 3), () async {
+      // First update state to drawing
+      await gameRef.update({
+        'state': GameState.drawing.toString(),
+      });
+      // Then start the new round
+      await startNewRound(gameId);
     });
   }
 
@@ -196,6 +213,33 @@ class GameService {
     }
   }
 
+  Future<void> startGame(String gameId) async {
+    final gameRef = _database.child('game_sessions').child(gameId);
+    final snapshot = await gameRef.get();
+    
+    if (!snapshot.exists) return;
+    
+    final game = GameSession.fromJson(
+      Map<String, dynamic>.from(snapshot.value as Map));
+    
+    // Only start if we have 2 or 3 players
+    if (game.players.length >= 2 && game.players.length <= 3) {
+      // Make first player the drawer
+      for (var player in game.players) {
+        player.isDrawing = false;
+      }
+      game.players.first.isDrawing = true;
+      
+      await gameRef.update({
+        'state': GameState.drawing.toString(),
+        'players': game.players.map((p) => p.toJson()).toList(),
+      });
+      
+      // Start the first round
+      await startNewRound(gameId);
+    }
+  }
+
   Stream<List<GameSession>> getAvailableGames() {
     return _database
         .child('game_sessions')
@@ -208,7 +252,9 @@ class GameService {
           final gameData = Map<String, dynamic>.from(value);
           gameData['id'] = key;
           final game = GameSession.fromJson(gameData);
-          if (game.state == GameState.waiting) {
+          // Only show games that are in waiting state and have less than 3 players
+          // Changed from "length < 3" to "length <= 3" to allow the third player to see and join
+          if (game.state == GameState.waiting && game.players.length <= 3) {
             games.add(game);
           }
         });

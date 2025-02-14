@@ -48,7 +48,7 @@ class GameSession {
     this.currentWord,
     this.roundTime = 80,
     this.currentRound = 0,
-    this.maxRounds = 3,
+    this.maxRounds = 0,  // Initialize to 0, will be set based on player count
     this.roundStartTime,
     this.playersGuessedCorrect = const [],
   });

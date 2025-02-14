@@ -116,6 +116,12 @@ class _GameRoomScreenState extends State<GameRoomScreen> with SingleTickerProvid
                               DateTime.now()
                                   .difference(session.roundStartTime!)
                                   .inSeconds;
+                          
+                          // End round when timer reaches zero
+                          if (remaining <= 0 && session.state == GameState.drawing) {
+                            _gameService.endRound(widget.gameId);
+                          }
+
                           return Text(
                             'Time: ${remaining > 0 ? remaining : 0}s',
                             style: TextStyle(

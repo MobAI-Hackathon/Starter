@@ -107,11 +107,8 @@ class GameService {
       'roundStartTime': ServerValue.timestamp,
       'playersGuessedCorrect': [],
     });
-
-    // Start round timer
-    Timer(Duration(seconds: game.roundTime), () {
-      endRound(gameId);
-    });
+    
+    // Remove the timer since we're handling it in the UI now
   }
 
   Future<void> endRound(String gameId) async {
@@ -122,6 +119,11 @@ class GameService {
     final game = GameSession.fromJson(
       Map<String, dynamic>.from(snapshot.value as Map));
     
+    // Don't proceed if the game is already in roundEnd or gameOver state
+    if (game.state == GameState.roundEnd || game.state == GameState.gameOver) {
+      return;
+    }
+
     // Increment round counter
     final nextRound = game.currentRound + 1;
     
@@ -149,6 +151,7 @@ class GameService {
       'currentWord': null,
       'drawing_data': null,
       'playersGuessedCorrect': [],
+      'roundStartTime': null, // Reset round timer
     });
 
     // Start new round after a short delay

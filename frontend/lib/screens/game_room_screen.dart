@@ -64,6 +64,31 @@ class _GameRoomScreenState extends State<GameRoomScreen> with SingleTickerProvid
   Widget _buildGameContent(GameSession session) {
     final currentPlayer = session.players.firstWhere((p) => p.id == widget.userId);
 
+    // Only start the round if we have enough players and the game is in waiting state
+    if (currentPlayer.isDrawing && 
+        session.currentWord == null && 
+        session.players.length >= 2 &&
+        session.state == GameState.waiting) {
+      _gameService.startNewRound(widget.gameId);
+    }
+
+    // Add this section to show waiting message
+    if (session.state == GameState.waiting && session.players.length < 2) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Text(
+              'Waiting for more players...',
+              style: TextStyle(fontSize: 24),
+            ),
+            const SizedBox(height: 16),
+            Text('${session.players.length}/2 players'),
+          ],
+        ),
+      );
+    }
+
     return Stack(
       children: [
         Container(

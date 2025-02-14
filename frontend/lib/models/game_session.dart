@@ -90,6 +90,7 @@ class GameSession {
       players: [
         Player(id: creatorId, name: creatorName, isDrawing: true),
       ],
+      state: GameState.waiting, // Explicitly set initial state
     );
     
     await ref.set(session.toJson());

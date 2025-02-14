@@ -849,7 +849,9 @@ void onPanStart(DragStartDetails details) {
                 ),
                 child: Text(
                   isDrawingAllowed
-                      ? 'Draw: ${widget.gameSession!.currentWord}'
+                      ? widget.gameSession!.currentWord != null
+                          ? 'Draw: ${widget.gameSession!.currentWord}'
+                          : 'Waiting for word...'
                       : 'Guess the word!',
                   style: TextStyle(
                     fontSize: 18,

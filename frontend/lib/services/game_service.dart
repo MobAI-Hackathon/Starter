@@ -61,6 +61,27 @@ class GameService {
 
   Future<void> startNewRound(String gameId) async {
     final gameRef = _database.child('game_sessions').child(gameId);
+    
+    // First check if we have enough players (at least 2)
+    final snapshot = await gameRef.get();
+    if (!snapshot.exists) return;
+    
+    final game = GameSession.fromJson(Map<String, dynamic>.from(snapshot.value as Map));
+    if (game.players.length < 2) return;  // Don't start if not enough players
+    
+    // Only proceed if we're in waiting state
+    if (game.state == GameState.waiting) {
+      await gameRef.update({
+        'state': GameState.starting.toString(),
+      });
+    }
+    
+    // Check if there's already a word set
+    final wordSnapshot = await gameRef.child('currentWord').get();
+    if (wordSnapshot.exists && wordSnapshot.value != null) {
+      return;
+    }
+    
     final word = _wordList[DateTime.now().millisecondsSinceEpoch % _wordList.length];
     
     await gameRef.update({
@@ -109,18 +130,18 @@ class GameService {
   Stream<List<GameSession>> getAvailableGames() {
     return _database
         .child('game_sessions')
-        .orderByChild('state')
-        .equalTo(GameState.waiting.toString())
         .onValue
         .map((event) {
       final games = <GameSession>[];
       if (event.snapshot.value != null) {
-        // Fix type casting
-        final gamesMap = Map<String, dynamic>.from(event.snapshot.value as Map<Object?, Object?>);
+        final gamesMap = Map<String, dynamic>.from(event.snapshot.value as Map);
         gamesMap.forEach((key, value) {
-          final gameData = Map<String, dynamic>.from(value as Map<Object?, Object?>);
+          final gameData = Map<String, dynamic>.from(value);
           gameData['id'] = key;
-          games.add(GameSession.fromJson(gameData));
+          final game = GameSession.fromJson(gameData);
+          if (game.state == GameState.waiting) {
+            games.add(game);
+          }
         });
       }
       return games;

@@ -108,6 +108,7 @@ class _MyAppState extends State<MyApp> {
       '/game_mode': (context) => const GameModeScreen(), // Updated route name
       '/settings': (context) => SettingsScreen(),
       '/forgot_password': (context) => ForgotPasswordScreen(),
+      '/online_mode': (context) => const OnlineModeScreen(), // New route
     };
   }
 }

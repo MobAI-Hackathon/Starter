@@ -222,7 +222,8 @@ class _LoginScreenState extends State<LoginScreen>
 
             final prefs = await SharedPreferences.getInstance();
             await prefs.setBool('isLoggedIn', true);
-            Navigator.pushNamed(context, '/game_mode'); // Changed from '/navbar' to '/game_mode'
+            Navigator.pushNamed(context,
+                '/game_mode'); // Changed from '/navbar' to '/game_mode'
           } else {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(

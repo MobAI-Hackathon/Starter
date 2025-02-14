@@ -5,6 +5,7 @@ import 'package:hanini_frontend/screens/SettingsScreen/SettingsScreen.dart';
 import 'package:hanini_frontend/screens/auth/forgot_password_screen.dart';
 import 'package:hanini_frontend/screens/auth/login_screen.dart';
 import 'package:hanini_frontend/screens/auth/signup_screen.dart';
+import 'package:hanini_frontend/screens/navScreens/Online_mode.dart';
 import 'package:hanini_frontend/screens/navScreens/favoritespage.dart';
 import 'package:hanini_frontend/screens/onboarding/onboarding_screen.dart';
 import 'localization/app_localization.dart';
@@ -104,11 +105,11 @@ class _MyAppState extends State<MyApp> {
     return {
       '/': (context) => OnboardingScreen(),
       '/login': (context) => const LoginScreen(),
-      '/signup': (context) => const SignupScreen(),
+      '/signup': (context) =>  SignInScreen(),
       '/game_mode': (context) => const GameModeScreen(), // Updated route name
       '/settings': (context) => SettingsScreen(),
       '/forgot_password': (context) => ForgotPasswordScreen(),
-      '/online_mode': (context) => const OnlineModeScreen(), // New route
+      '/online_mode': (context) =>  ChallengeScreen(), // New route
     };
   }
 }

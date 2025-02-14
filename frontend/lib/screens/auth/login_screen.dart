@@ -278,15 +278,16 @@ class _LoginScreenState extends State<LoginScreen>
     return Scaffold(
       body: Stack(
         children: [
-          // Background Image
+          // Updated Background Container
           Container(
-            width: MediaQuery.of(context).size.width,
-            height: MediaQuery.of(context).size.height,
-            decoration: const BoxDecoration(
-              image: DecorationImage(
-                image: AssetImage('assets/images/genback.png'),
-                fit: BoxFit.cover,
-              ),
+            width: double.infinity,
+            height: double.infinity,
+            color: Colors.black, // Added to prevent any transparent edges
+            child: Image.asset(
+              'assets/images/genback.png',
+              fit: BoxFit.fill,
+              width: double.infinity,
+              height: double.infinity,
             ),
           ),
           // Content
@@ -307,6 +308,7 @@ class _LoginScreenState extends State<LoginScreen>
                             scale: _scaleAnimation,
                             child: Container(
                               alignment: Alignment.center,
+                              padding: const EdgeInsets.only(left: 40.0),
                               decoration: BoxDecoration(
                                 boxShadow: [
                                   BoxShadow(
@@ -349,11 +351,8 @@ class _LoginScreenState extends State<LoginScreen>
                               height: 25), // Adjust spacing before button
                           _buildLoginButton(
                               context, "Sign in"), // Changed button text
+                          const SizedBox(height: 20),
                           _buildGoogleSignInButton(), // Add Google Sign-In Button
-                          _buildForgotPasswordButton(
-                              context,
-                              localizations
-                                  .forgotPassword), // Localized forgot password text
                           _buildSignupPrompt(
                               context,
                               localizations
@@ -408,14 +407,16 @@ class _LoginScreenState extends State<LoginScreen>
 
   Widget _buildLoginButton(BuildContext context, String buttonText) {
     return Container(
+      width: double.infinity,
+      height: 60,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF6A5EDE).withOpacity(0.3),
-            spreadRadius: 2,
-            blurRadius: 8,
-            offset: const Offset(0, 4),
+            color: const Color(0xFF6A5EDE).withOpacity(0.4),
+            spreadRadius: 3,
+            blurRadius: 12,
+            offset: const Offset(0, 6),
           ),
         ],
       ),
@@ -424,21 +425,27 @@ class _LoginScreenState extends State<LoginScreen>
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color(0xFF6A5EDE),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(16),
           ),
-          padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+          padding: const EdgeInsets.symmetric(vertical: 16),
           elevation: 0,
         ),
         child: isLoading
-            ? const CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+            ? const SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                  strokeWidth: 2.5,
+                ),
               )
             : Text(
                 buttonText,
                 style: GoogleFonts.poppins(
-                  fontSize: 18,
+                  fontSize: 20,
                   fontWeight: FontWeight.w600,
                   color: Colors.white,
+                  letterSpacing: 0.5,
                 ),
               ),
       ),
@@ -595,22 +602,6 @@ class _LoginScreenState extends State<LoginScreen>
         ),
       );
     }
-  }
-
-  Widget _buildForgotPasswordButton(
-      BuildContext context, String forgotPasswordText) {
-    return TextButton(
-      onPressed: () {
-        Navigator.pushNamed(context, '/forgot_password');
-      },
-      child: Text(
-        forgotPasswordText,
-        style: GoogleFonts.poppins(
-          fontSize: 16,
-          color: Colors.white70,
-        ),
-      ),
-    );
   }
 
   Widget _buildSignupPrompt(BuildContext context, String signupPromptText) {

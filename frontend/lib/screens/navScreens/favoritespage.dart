@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:hanini_frontend/screens/game_room_screen.dart';
 import 'package:hanini_frontend/screens/navScreens/homepage.dart';
+import 'package:hanini_frontend/screens/navScreens/Online_mode.dart';
 
 void main() {
   runApp(const MyApp());
@@ -25,11 +27,20 @@ class GameModeScreen extends StatefulWidget {
 }
 
 class _GameModeScreenState extends State<GameModeScreen> {
-  String selectedMode = "Online";
+  String selectedMode = "Online"; // Default is Online
 
   void selectMode(String mode) {
     setState(() {
       selectedMode = mode;
+      // Navigate immediately when Online is selected
+      if (mode == "Online") {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ChallengeScreen(),
+          ),
+        );
+      }
     });
   }
 
@@ -79,11 +90,30 @@ class _GameModeScreenState extends State<GameModeScreen> {
                   padding: const EdgeInsets.only(bottom: 100),
                   child: ElevatedButton(
                     onPressed: () {
-                      if (selectedMode == "Offline") {
+                      // Navigate when Start is pressed
+                      if (selectedMode == "Online") {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ChallengeScreen(),
+                          ),
+                        );
+                      } else if (selectedMode == "Offline") {
                         Navigator.pushReplacement(
                           context,
                           MaterialPageRoute(
                             builder: (context) => const SketchPredictionPage(),
+                          ),
+                        );
+                      } else if (selectedMode == "Multi player") {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const GameRoomScreen(
+                              userName: '',
+                              gameId: '',
+                              userId: '',
+                            ),
                           ),
                         );
                       }

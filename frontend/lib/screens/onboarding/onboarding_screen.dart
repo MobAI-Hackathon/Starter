@@ -89,8 +89,8 @@ class OnboardingScreen extends StatelessWidget {
                       shadowColor: Colors.black.withOpacity(0.3),
                     ),
                     onPressed: () {
-                      Navigator.pushNamed(
-                          context, '/login'); // Add navigation to login
+                      Navigator.pushNamed(context,
+                          '/signup'); // Changed from '/login' to '/signup'
                     },
                     child: Text(
                       "GET STARTED",

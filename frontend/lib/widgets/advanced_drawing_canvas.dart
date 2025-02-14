@@ -732,102 +732,100 @@ void onPanStart(DragStartDetails details) {
             ),
           ),
         ),
-        Positioned(
-          top: 40,
-          left: 20,
-          right: 20,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              // Shapes selector
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.grey.withOpacity(0.3),
-                      blurRadius: 5,
-                      spreadRadius: 1,
+        // Only show tools if user is allowed to draw
+        if (isDrawingAllowed) ...[
+          Positioned(
+            top: 40,
+            left: 20,
+            right: 20,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                // Shapes selector
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.grey.withOpacity(0.3),
+                        blurRadius: 5,
+                        spreadRadius: 1,
+                      ),
+                    ],
+                  ),
+                  child: PopupMenuButton<String>(
+                    initialValue: selectedShape,
+                    onSelected: (String value) {
+                      setState(() => selectedShape = value);
+                    },
+                    itemBuilder: (BuildContext context) => shapes.map((shape) {
+                      return PopupMenuItem<String>(
+                        value: shape['value'],
+                        child: Row(
+                          children: [
+                            Icon(
+                              shape['icon'],
+                              color: selectedShape == shape['value'] 
+                                  ? selectedColor 
+                                  : Colors.grey,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(shape['name']),
+                          ],
+                        ),
+                      );
+                    }).toList(),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            shapes.firstWhere((s) => s['value'] == selectedShape)['icon'],
+                            color: selectedColor,
+                          ),
+                          const SizedBox(width: 8),
+                          const Icon(Icons.arrow_drop_down),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                Row(
+                  children: [
+                    IconButton(
+                      icon: Icon(isFillMode ? Icons.format_color_fill : Icons.format_color_reset),
+                      color: isFillMode ? selectedColor : Colors.grey,
+                      onPressed: () => setState(() => isFillMode = !isFillMode),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.undo),
+                      onPressed: undo,
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.redo),
+                      onPressed: redo,
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.clear),
+                      onPressed: () {
+                        clearCanvas();
+                      },
                     ),
                   ],
                 ),
-                child: PopupMenuButton<String>(
-                  initialValue: selectedShape,
-                  onSelected: (String value) {
-                    setState(() => selectedShape = value);
-                  },
-                  itemBuilder: (BuildContext context) => shapes.map((shape) {
-                    return PopupMenuItem<String>(
-                      value: shape['value'],
-                      child: Row(
-                        children: [
-                          Icon(
-                            shape['icon'],
-                            color: selectedShape == shape['value'] 
-                                ? selectedColor 
-                                : Colors.grey,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(shape['name']),
-                        ],
-                      ),
-                    );
-                  }).toList(),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          shapes.firstWhere((s) => s['value'] == selectedShape)['icon'],
-                          color: selectedColor,
-                        ),
-                        const SizedBox(width: 8),
-                        const Icon(Icons.arrow_drop_down),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              Row(
-                children: [
-                  IconButton(
-                    icon: Icon(isFillMode ? Icons.format_color_fill : Icons.format_color_reset),
-                    color: isFillMode ? selectedColor : Colors.grey,
-                    onPressed: () => setState(() => isFillMode = !isFillMode),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.undo),
-                    onPressed: undo,
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.redo),
-                    onPressed: redo,
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.clear),
-                    onPressed: () {
-                      clearCanvas();
-                    },
-                  ),
-                ],
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
-        Positioned(
-          right: 16,
-          bottom: 16,
-          child: buildSpeedDial(),
-        ),
-        if (!isDrawingAllowed)
-          Container(
-            width: double.infinity,
-            height: double.infinity,
-            color: Colors.transparent,
-            child: AbsorbPointer(),
+          Positioned(
+            right: 16,
+            bottom: 16,
+            child: buildSpeedDial(),
           ),
+        ],
+
+        // Show word display on top
         if (widget.gameSession != null)
           Positioned(
             top: 8,

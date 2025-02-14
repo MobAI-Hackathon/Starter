@@ -137,7 +137,7 @@ class _GameRoomScreenState extends State<GameRoomScreen> with SingleTickerProvid
           ),
         ),
         Positioned(
-          right: _isChatVisible ? 310 : 16,
+          left: _isChatVisible ? 16 : 16,  // Update these valueschat is visible
           bottom: 16,
           child: FloatingActionButton(
             onPressed: _toggleChat,
@@ -149,7 +149,7 @@ class _GameRoomScreenState extends State<GameRoomScreen> with SingleTickerProvid
           ),
         ),
         Positioned(
-          right: 0,
+          right: 0,  // Keep the chat panel on the right
           top: 0,
           bottom: 0,
           child: SlideTransition(

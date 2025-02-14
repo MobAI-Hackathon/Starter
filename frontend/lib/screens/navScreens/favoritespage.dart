@@ -127,7 +127,7 @@ class _GameModeScreenState extends State<GameModeScreen> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        backgroundColor: Colors.purple,
+        backgroundColor: const Color(0xFF6A5EDE),
         child: const Icon(Icons.create),
         onPressed: () {},
       ),

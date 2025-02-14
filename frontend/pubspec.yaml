@@ -74,3 +74,4 @@ flutter:
     - assets/animation/Animation - 1739443672393.json
     - assets/images/background.png
     - assets/images/sord.png  # Add specific file reference
+    - assets/images/genback.png

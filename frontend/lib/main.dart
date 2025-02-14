@@ -8,10 +8,9 @@ import 'package:hanini_frontend/screens/auth/signup_screen.dart';
 import 'package:hanini_frontend/screens/navScreens/favoritespage.dart';
 import 'package:hanini_frontend/screens/onboarding/onboarding_screen.dart';
 import 'localization/app_localization.dart';
-import 'package:flutter/services.dart'; // Import SystemChrome
+import 'package:flutter/services.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:shared_preferences/shared_preferences.dart'; // Import SharedPreferences
-import 'navbar.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -38,13 +37,13 @@ Future<String> _determineInitialRoute() async {
 
   if (isFirstLaunch) {
     await prefs.setBool('isFirstLaunch', false);
-    return '/'; // Show onboarding screen
+    return '/';
   }
 
   if (isLoggedIn) {
-    return '/favorites'; // Changed from '/navbar' to '/favorites'
+    return '/game_mode'; // Updated to match the new route name
   }
-  return '/login'; // Default to login if not logged in
+  return '/login';
 }
 
 class MyApp extends StatefulWidget {
@@ -106,10 +105,7 @@ class _MyAppState extends State<MyApp> {
       '/': (context) => OnboardingScreen(),
       '/login': (context) => const LoginScreen(),
       '/signup': (context) => const SignupScreen(),
-      '/favorites': (context) =>
-          const GameModeScreen(), // Add direct route to favorites
-      '/navbar': (context) =>
-          NavbarPage(initialIndex: 2), // Change initial index to 2 (favorites)
+      '/game_mode': (context) => const GameModeScreen(), // Updated route name
       '/settings': (context) => SettingsScreen(),
       '/forgot_password': (context) => ForgotPasswordScreen(),
     };

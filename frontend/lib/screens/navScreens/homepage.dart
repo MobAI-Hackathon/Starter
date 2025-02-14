@@ -3,6 +3,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:hanini_frontend/widgets/simple_drawing_canvas.dart';
+
 class SketchPredictionPage extends StatefulWidget {
   const SketchPredictionPage({Key? key}) : super(key: key);
 
@@ -54,7 +55,7 @@ class _SketchPredictionPageState extends State<SketchPredictionPage> {
 
       // Send to API
       final response = await http.post(
-        Uri.parse('http://localhost:8000/predict/sketch'),
+        Uri.parse('http://10.80.10.14:8000/predict/sketch'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'sketch_data': base64Image,
@@ -63,9 +64,13 @@ class _SketchPredictionPageState extends State<SketchPredictionPage> {
 
       if (response.statusCode == 200) {
         final result = jsonDecode(response.body);
-        setState(() {
-          _prediction = result['data'];
-        });
+        final predictions = result['data']['predictions'] as List;
+        if (predictions.isNotEmpty) {
+          final topPrediction = predictions[0];
+          setState(() {
+            _prediction = 'Class ${topPrediction['class_index']} (${(topPrediction['probability'] * 100).toStringAsFixed(2)}%)';
+          });
+        }
       } else {
         throw Exception('Failed to get prediction');
       }

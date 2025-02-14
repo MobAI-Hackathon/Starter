@@ -7,7 +7,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart'; // Import SharedPreferences
 import 'package:firebase_messaging/firebase_messaging.dart';
 
-
 class LoginScreen extends StatefulWidget {
   const LoginScreen({Key? key}) : super(key: key);
 
@@ -168,13 +167,15 @@ class _LoginScreenState extends State<LoginScreen>
 
       if (googleUser != null) {
         try {
-          final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+          final GoogleSignInAuthentication googleAuth =
+              await googleUser.authentication;
           final AuthCredential credential = GoogleAuthProvider.credential(
             accessToken: googleAuth.accessToken,
             idToken: googleAuth.idToken,
           );
 
-          final UserCredential userCredential = await FirebaseAuth.instance.signInWithCredential(credential);
+          final UserCredential userCredential =
+              await FirebaseAuth.instance.signInWithCredential(credential);
           final User? user = userCredential.user;
 
           if (user != null) {
@@ -207,8 +208,6 @@ class _LoginScreenState extends State<LoginScreen>
                 .doc(user.uid)
                 .set(userData, SetOptions(merge: true));
 
-
-            
             showDialog(
               context: context,
               barrierDismissible: false,
@@ -223,8 +222,7 @@ class _LoginScreenState extends State<LoginScreen>
 
             final prefs = await SharedPreferences.getInstance();
             await prefs.setBool('isLoggedIn', true);
-            Navigator.pushNamed(context, '/navbar');
-
+            Navigator.pushNamed(context, '/game_mode'); // Changed from '/navbar' to '/game_mode'
           } else {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
@@ -274,137 +272,175 @@ class _LoginScreenState extends State<LoginScreen>
 
   @override
   Widget build(BuildContext context) {
-    final localizations =
-        AppLocalizations.of(context)!; // Access localized strings
+    final localizations = AppLocalizations.of(context)!;
 
     return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Color.fromARGB(255, 106, 27, 154), // Rich Amethyst
-              Color.fromARGB(255, 171, 71, 188), // Orchid
-              Color.fromARGB(255, 145, 41, 140), // Wild Strawberry
-            ],
+      body: Stack(
+        children: [
+          // Background Image
+          Container(
+            width: MediaQuery.of(context).size.width,
+            height: MediaQuery.of(context).size.height,
+            decoration: const BoxDecoration(
+              image: DecorationImage(
+                image: AssetImage('assets/images/genback.png'),
+                fit: BoxFit.cover,
+              ),
+            ),
           ),
-        ),
-        child: Center(
-          child: SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  // Wrap the logo with GestureDetector to detect taps
-                  GestureDetector(
-                    child: FadeTransition(
-                      opacity: _fadeAnimation,
-                      child: ScaleTransition(
-                        scale: _scaleAnimation,
-                        child: Container(
-                          decoration: BoxDecoration(
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.3),
-                                offset: const Offset(0, 8),
-                                blurRadius: 200,
-                                spreadRadius: 2,
+          // Content
+          Center(
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    const SizedBox(height: 40), // Add extra space at the top
+                    Center(
+                      child: GestureDetector(
+                        child: FadeTransition(
+                          opacity: _fadeAnimation,
+                          child: ScaleTransition(
+                            scale: _scaleAnimation,
+                            child: Container(
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration(
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.3),
+                                    offset: const Offset(0, 8),
+                                    blurRadius: 200,
+                                    spreadRadius: 2,
+                                  ),
+                                ],
                               ),
-                            ],
-                          ),
-                          child: Image.asset(
-                            'assets/images/onboarding3_b.png', // Replace with your logo path
-                            height: 220,
-                            width: 220,
+                              child: Image.asset(
+                                'assets/images/onboarding3_b.png',
+                                height: 220,
+                                width: 220,
+                              ),
+                            ),
                           ),
                         ),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 20),
-                  Text(
-                    localizations.loginTitle, // Localized title
-                    style: GoogleFonts.poppins(
-                      fontSize: 32,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
+                    const SizedBox(height: 20),
+                    Text(
+                      localizations.loginTitle, // Localized title
+                      style: GoogleFonts.poppins(
+                        fontSize: 32,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 40),
-                  _buildTextField(localizations.email, false,
-                      _emailController), // Bind email controller
-                  const SizedBox(height: 15),
-                  _buildTextField(localizations.password, true,
-                      _passwordController), // Bind password controller
-                  const SizedBox(height: 30),
-                  _buildLoginButton(context,
-                      localizations.loginButton), // Localized login button text
-                  const SizedBox(height: 20),
-                  _buildGoogleSignInButton(), // Add Google Sign-In Button
-                  _buildForgotPasswordButton(
-                      context,
-                      localizations
-                          .forgotPassword), // Localized forgot password text
-                  _buildSignupPrompt(context,
-                      localizations.createAccount), // Localized sign-up prompt
-                ],
+                    const SizedBox(height: 30), // Adjust spacing
+                    Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Column(
+                        children: [
+                          _buildTextField(
+                              localizations.email, false, _emailController),
+                          _buildTextField(localizations.password, true,
+                              _passwordController),
+                          const SizedBox(
+                              height: 25), // Adjust spacing before button
+                          _buildLoginButton(
+                              context, "Sign in"), // Changed button text
+                          _buildGoogleSignInButton(), // Add Google Sign-In Button
+                          _buildForgotPasswordButton(
+                              context,
+                              localizations
+                                  .forgotPassword), // Localized forgot password text
+                          _buildSignupPrompt(
+                              context,
+                              localizations
+                                  .createAccount), // Localized sign-up prompt
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
-        ),
+        ],
       ),
     );
   }
 
   Widget _buildTextField(
       String label, bool obscureText, TextEditingController controller) {
-    return TextField(
-      controller: controller, // Bind the controller here
-      obscureText: obscureText,
-      decoration: InputDecoration(
-        labelText: label,
-        labelStyle: GoogleFonts.poppins(color: Colors.white),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Colors.white),
+    return Container(
+      margin: const EdgeInsets.only(bottom: 15), // Add margin for spacing
+      child: TextField(
+        controller: controller,
+        obscureText: obscureText,
+        decoration: InputDecoration(
+          labelText: label,
+          labelStyle: GoogleFonts.poppins(color: Colors.black54),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: Colors.black12),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: Colors.black12),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: Colors.black26, width: 2),
+          ),
+          filled: true,
+          fillColor: Colors.white,
+          contentPadding:
+              const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
         ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Colors.white, width: 2),
+        style: GoogleFonts.poppins(
+          color: Colors.black87,
+          fontSize: 16,
         ),
-        filled: true,
-        fillColor: Colors.white.withOpacity(0.1),
-        contentPadding:
-            const EdgeInsets.symmetric(vertical: 18, horizontal: 12),
       ),
-      style: GoogleFonts.poppins(color: Colors.white),
     );
   }
 
   Widget _buildLoginButton(BuildContext context, String buttonText) {
-    return ElevatedButton(
-      onPressed: isLoading ? null : () => handleLogin(context),
-      style: ElevatedButton.styleFrom(
-        backgroundColor: isLoading ? Colors.grey : const Color(0xFFFFFFFF),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(30.0),
-        ),
-        padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
-        elevation: 6,
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF6A5EDE).withOpacity(0.3),
+            spreadRadius: 2,
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
-      child: isLoading
-          ? const CircularProgressIndicator(
-              valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF1A237E)),
-            )
-          : Text(
-              buttonText,
-              style: GoogleFonts.poppins(
-                fontSize: 18,
-                color: const Color(0xFF1A237E),
+      child: ElevatedButton(
+        onPressed: isLoading ? null : () => handleLogin(context),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color(0xFF6A5EDE),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+          elevation: 0,
+        ),
+        child: isLoading
+            ? const CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+              )
+            : Text(
+                buttonText,
+                style: GoogleFonts.poppins(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
               ),
-            ),
+      ),
     );
   }
 
@@ -453,10 +489,10 @@ class _LoginScreenState extends State<LoginScreen>
                 child: CircularProgressIndicator(),
               ),
             );
-      
+
             // Hide loading indicator
             Navigator.of(context).pop();
-      
+
             // Update user status in Firestore
             await FirebaseFirestore.instance
                 .collection('users')
@@ -466,20 +502,20 @@ class _LoginScreenState extends State<LoginScreen>
               'isConnected': true,
               'isEmailVerified': true,
             }, SetOptions(merge: true));
-      
+
             await saveDeviceTokenToFirestore(user.uid);
-      
+
             // Navigate based on user status
             final userDoc = await FirebaseFirestore.instance
                 .collection('users')
                 .doc(user.uid)
                 .get();
-      
+
             if (userDoc.exists && userDoc.data()?['isNotFirst'] == false) {
               final prefs = await SharedPreferences.getInstance();
               await prefs.setBool('isLoggedIn', true);
-              Navigator.pushNamed(context, '/navbar');
-            } 
+              Navigator.pushNamed(context, '/game_mode');
+            }
           } catch (e) {
             debugPrint('Error during data initialization: $e');
             ScaffoldMessenger.of(context).showSnackBar(

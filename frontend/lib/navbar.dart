@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hanini_frontend/screens/navScreens/chatpage.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:hanini_frontend/screens/Profiles/SimpleUserProfile.dart';
 import 'package:hanini_frontend/screens/navScreens/searchpage.dart';
@@ -9,9 +10,10 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:hanini_frontend/localization/app_localization.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:hanini_frontend/screens/navScreens/notificationspage.dart'; 
+import 'package:hanini_frontend/screens/navScreens/notificationspage.dart';
 import 'models/colors.dart';
 import 'package:hanini_frontend/main.dart'; // Import MyApp class
+import 'screens/scribble_lobby_screen.dart';
 
 class CustomNavBar extends StatelessWidget {
   final int selectedIndex;
@@ -47,9 +49,17 @@ class CustomNavBar extends StatelessWidget {
             label: appLocalizations.favorites,
             isSelected: selectedIndex == 2),
         _buildDestination(
+            icon: Iconsax.message,
+            label: "Chat",
+            isSelected: selectedIndex == 3),
+        _buildDestination(
+            icon: Icons.games,
+            label: 'Scribble',
+            isSelected: selectedIndex == 4),
+        _buildDestination(
             icon: Iconsax.user,
             label: appLocalizations.profile,
-            isSelected: selectedIndex == 3),
+            isSelected: selectedIndex == 5),
       ],
     );
   }
@@ -115,7 +125,6 @@ class _NavbarPageState extends State<NavbarPage> {
     _initializeScreens();
   }
 
- 
   Future<void> _initializeScreens() async {
     try {
       setState(() {
@@ -123,6 +132,8 @@ class _NavbarPageState extends State<NavbarPage> {
           HomePage(),
           SearchPage(),
           FavoritesPage(),
+          ChatPage(), // Add ChatPage here
+          ScribbleLobbyScreen(), // Add Scribble Game here
           SimpleUserProfile(),
         ];
         isLoading = false;
@@ -194,7 +205,7 @@ class _NavbarPageState extends State<NavbarPage> {
             default:
               newLocale = const Locale('en', '');
           }
-          
+
           // Force rebuild with new locale
           MyApp.of(context)?.changeLanguage(newLocale);
         });
@@ -206,7 +217,6 @@ class _NavbarPageState extends State<NavbarPage> {
 
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-
 
   @override
   Widget build(BuildContext context) {
@@ -332,5 +342,4 @@ class _NavbarPageState extends State<NavbarPage> {
       ],
     );
   }
-  
 }

@@ -44,7 +44,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
   Future<String> _getAccessToken() async {
     try {
       // Load the service account JSON
-      final serviceAccountJson = await rootBundle.loadString('assets/credentials/test.json');
+      final serviceAccountJson = await rootBundle.loadString('assets/credentials/test1.json');
 
       final credentials = auth.ServiceAccountCredentials.fromJson(serviceAccountJson);
       final client = await auth.clientViaServiceAccount(credentials, [

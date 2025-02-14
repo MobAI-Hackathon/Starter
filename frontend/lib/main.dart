@@ -5,6 +5,7 @@ import 'package:hanini_frontend/screens/SettingsScreen/SettingsScreen.dart';
 import 'package:hanini_frontend/screens/auth/forgot_password_screen.dart';
 import 'package:hanini_frontend/screens/auth/login_screen.dart';
 import 'package:hanini_frontend/screens/auth/signup_screen.dart';
+import 'package:hanini_frontend/screens/navScreens/favoritespage.dart';
 import 'package:hanini_frontend/screens/onboarding/onboarding_screen.dart';
 import 'localization/app_localization.dart';
 import 'package:flutter/services.dart'; // Import SystemChrome
@@ -12,23 +13,21 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:shared_preferences/shared_preferences.dart'; // Import SharedPreferences
 import 'navbar.dart';
 
-
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   // Initialize Firebase first
   await Firebase.initializeApp();
-  
 
   final cameras = await availableCameras();
-  
+
   SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
   ]);
-  
+
   final initialRoute = await _determineInitialRoute();
-  
+
   runApp(MyApp(cameras: cameras, initialRoute: initialRoute));
 }
 
@@ -43,11 +42,10 @@ Future<String> _determineInitialRoute() async {
   }
 
   if (isLoggedIn) {
-    return '/navbar'; // Show navbar if logged in
+    return '/favorites'; // Changed from '/navbar' to '/favorites'
   }
   return '/login'; // Default to login if not logged in
 }
-
 
 class MyApp extends StatefulWidget {
   final List<CameraDescription> cameras;
@@ -108,7 +106,10 @@ class _MyAppState extends State<MyApp> {
       '/': (context) => OnboardingScreen(),
       '/login': (context) => const LoginScreen(),
       '/signup': (context) => const SignupScreen(),
-      '/navbar': (context) => NavbarPage(initialIndex: 0),
+      '/favorites': (context) =>
+          const GameModeScreen(), // Add direct route to favorites
+      '/navbar': (context) =>
+          NavbarPage(initialIndex: 2), // Change initial index to 2 (favorites)
       '/settings': (context) => SettingsScreen(),
       '/forgot_password': (context) => ForgotPasswordScreen(),
     };

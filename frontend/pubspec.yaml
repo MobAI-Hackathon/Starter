@@ -72,3 +72,5 @@ flutter:
     - assets/animation/voice_wave2.json
     - assets/animation/processing.json
     - assets/animation/Animation - 1739443672393.json
+    - assets/images/background.png
+    - assets/images/sord.png  # Add specific file reference

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:hanini_frontend/screens/Profiles/SimpleUserProfile.dart';
 import 'package:hanini_frontend/screens/navScreens/chatpage.dart';
 import 'package:iconsax/iconsax.dart';
-import 'package:hanini_frontend/screens/Profiles/SimpleUserProfile.dart';
+import 'package:hanini_frontend/screens/Profiles/SimpleUserProfile.dart'
+    as profile;
 import 'package:hanini_frontend/screens/navScreens/searchpage.dart';
 import 'package:hanini_frontend/screens/navScreens/favoritespage.dart';
 import 'package:hanini_frontend/screens/navScreens/sidebar.dart';
@@ -12,7 +14,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:hanini_frontend/screens/navScreens/notificationspage.dart';
 import 'models/colors.dart';
-import 'package:hanini_frontend/main.dart'; // Import MyApp class
+import 'package:hanini_frontend/main.dart' as main_app; // Import MyApp class
 import 'screens/scribble_lobby_screen.dart';
 
 class CustomNavBar extends StatelessWidget {
@@ -129,12 +131,12 @@ class _NavbarPageState extends State<NavbarPage> {
     try {
       setState(() {
         screens = [
-          HomePage(),
+          SketchPredictionPage(),
           SearchPage(),
-          FavoritesPage(),
+          GameModeScreen(),
           ChatPage(), // Add ChatPage here
           ScribbleLobbyScreen(), // Add Scribble Game here
-          SimpleUserProfile(),
+          ProfileScreen(),
         ];
         isLoading = false;
       });
@@ -207,7 +209,7 @@ class _NavbarPageState extends State<NavbarPage> {
           }
 
           // Force rebuild with new locale
-          MyApp.of(context)?.changeLanguage(newLocale);
+          main_app.MyApp.of(context)?.changeLanguage(newLocale);
         });
       }
     } catch (e) {
@@ -227,31 +229,6 @@ class _NavbarPageState extends State<NavbarPage> {
         : PopScope(
             canPop: false,
             child: Scaffold(
-              appBar: PreferredSize(
-                preferredSize: const Size.fromHeight(64.0),
-                child: Container(
-                  decoration: const BoxDecoration(
-                    gradient: AppColors.mainGradient,
-                  ),
-                  child: AppBar(
-                    title: Text(
-                      appLocalizations.appTitle,
-                      style: GoogleFonts.poppins(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white,
-                      ),
-                    ),
-                    backgroundColor: Colors.transparent,
-                    elevation: 0,
-                    actions: [
-                      _buildNotificationBell(),
-                      _buildLanguageDropdown(),
-                    ],
-                  ),
-                ),
-              ),
-              drawer: Sidebar(context, appLocalizations),
               body: screens[selectedIndex],
               bottomNavigationBar: CustomNavBar(
                 selectedIndex: selectedIndex,
@@ -316,7 +293,7 @@ class _NavbarPageState extends State<NavbarPage> {
       default:
         newLocale = const Locale('en', '');
     }
-    MyApp.of(context)?.changeLanguage(newLocale);
+    main_app.MyApp.of(context)?.changeLanguage(newLocale);
   }
 
   Widget _buildNotificationBell() {

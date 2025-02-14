@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
 import '../models/game_session.dart';
+import '../services/game_service.dart';  // Add this import
 
 class GameChat extends StatefulWidget {
   final GameSession gameSession;
@@ -21,6 +22,7 @@ class GameChat extends StatefulWidget {
 class _GameChatState extends State<GameChat> {
   final _messageController = TextEditingController();
   final _chatRef = FirebaseDatabase.instance.ref().child('game_chats');
+  final _gameService = GameService();  // Add this
   
   void _sendMessage(String message) {
     if (message.isEmpty) return;
@@ -43,21 +45,14 @@ class _GameChatState extends State<GameChat> {
     });
 
     if (isCorrectGuess) {
-      // Update player score
-      final playerRef = FirebaseDatabase.instance
-          .ref()
-          .child('game_sessions')
-          .child(widget.gameSession.id)
-          .child('players');
+      // Call game service to handle the correct guess
+      _gameService.submitGuess(
+        widget.gameSession.id,
+        widget.userId,
+        message
+      );
       
-      playerRef.orderByChild('id').equalTo(widget.userId).once()
-          .then((DatabaseEvent event) {
-        if (event.snapshot.value != null) {
-          final playerKey = (event.snapshot.value as Map).keys.first;
-          playerRef.child(playerKey).child('score')
-              .set(ServerValue.increment(100));
-        }
-      });
+      // Remove the old score update logic since it's now handled in submitGuess
     }
 
     _messageController.clear();

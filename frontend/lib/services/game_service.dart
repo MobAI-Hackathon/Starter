@@ -56,6 +56,10 @@ class GameService {
         await gameRef.child('players/$playerIndex/score')
             .set(game.players[playerIndex].score);
       }
+
+      // End the current round and start the next one
+      await endRound(gameId);
+      await startNewRound(gameId);
     }
   }
 

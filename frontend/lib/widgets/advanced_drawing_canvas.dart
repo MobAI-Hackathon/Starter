@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:ui';
 import 'dart:math' show pi, cos, sin;
+import 'dart:async';  // Add this import
 import 'package:firebase_database/firebase_database.dart';
 import '../models/drawing_session.dart';
 import '../models/game_session.dart';
@@ -240,6 +241,10 @@ class AdvancedDrawingCanvasState extends State<AdvancedDrawingCanvas>
     }
   }
 
+  // Add these properties
+  final List<Map<String, dynamic>> _pointsBatch = [];
+  Timer? _syncTimer;
+  static const syncInterval = Duration(milliseconds: 100);
 
   @override
   void initState() {
@@ -282,31 +287,32 @@ class AdvancedDrawingCanvasState extends State<AdvancedDrawingCanvas>
         if (data['points'] != null) {
           final List<DrawingPoint?> newPoints = [];
           for (var point in List<dynamic>.from(data['points'])) {
-            if (point == null) {
+            if (point == null || point['isSeparator'] == true) {
               newPoints.add(null);
               continue;
             }
-            final pointData = Map<String, dynamic>.from(point);
+            
             newPoints.add(DrawingPoint(
               offset: Offset(
-                pointData['x'].toDouble(),
-                pointData['y'].toDouble(),
+                (point['x'] as num).toDouble(),
+                (point['y'] as num).toDouble(),
               ),
               paint: Paint()
-                ..color = Color(pointData['color'] as int)
-                ..strokeWidth = pointData['strokeWidth'].toDouble()
-                ..style = pointData['isFilled'] == true
+                ..color = Color(point['color'] as int)
+                ..strokeWidth = (point['strokeWidth'] as num).toDouble()
+                ..style = point['isFilled'] == true
                     ? PaintingStyle.fill
                     : PaintingStyle.stroke,
-              shape: pointData['shape'] as String?,
-              endOffset: pointData['endX'] != null
+              shape: point['shape'] as String?,
+              endOffset: point['endX'] != null
                   ? Offset(
-                      pointData['endX'].toDouble(),
-                      pointData['endY'].toDouble(),
+                      (point['endX'] as num).toDouble(),
+                      (point['endY'] as num).toDouble(),
                     )
                   : null,
             ));
           }
+          
           setState(() {
             drawingPoints = newPoints;
           });
@@ -339,81 +345,124 @@ class AdvancedDrawingCanvasState extends State<AdvancedDrawingCanvas>
   }
 
   void _initializeDrawingSync() {
-    // Listen to real-time drawing updates
-    _sessionRef.child('points').onChildAdded.listen((event) {
-      if (!_isInitialized) return;
+    // Use once() instead of onValue for initial load
+    _sessionRef.child('points').once().then((event) {
+      if (!_isInitialized || event.snapshot.value == null) return;
       
-      final pointData = Map<String, dynamic>.from(event.snapshot.value as Map);
+      final List<dynamic> pointsData = event.snapshot.value as List;
       
-      if (pointData['isSeparator'] == true) {
-        setState(() {
-          drawingPoints.add(null);
-        });
-        return;
-      }
-
-      final point = DrawingPoint(
-        offset: Offset(pointData['x'] as double, pointData['y'] as double),
-        paint: Paint()
-          ..color = Color(pointData['color'] as int)
-          ..strokeWidth = pointData['strokeWidth'] as double
-          ..style = pointData['isFilled'] == true 
-              ? PaintingStyle.fill 
-              : PaintingStyle.stroke,
-        shape: pointData['shape'] as String?,
-        endOffset: pointData['endX'] != null && pointData['endY'] != null
-            ? Offset(pointData['endX'] as double, pointData['endY'] as double)
-            : null,
-      );
-
       setState(() {
-        drawingPoints.add(point);
+        drawingPoints.clear();
+        for (final pointData in pointsData) {
+          if (pointData == null || pointData['isSeparator'] == true) {
+            drawingPoints.add(null);
+            continue;
+          }
+
+          drawingPoints.add(DrawingPoint(
+            offset: Offset(
+              (pointData['x'] as num).toDouble(),
+              (pointData['y'] as num).toDouble(),
+            ),
+            paint: Paint()
+              ..color = Color(pointData['color'] as int)
+              ..strokeWidth = (pointData['strokeWidth'] as num).toDouble()
+              ..style = pointData['isFilled'] == true 
+                  ? PaintingStyle.fill 
+                  : PaintingStyle.stroke,
+            shape: pointData['shape'] as String?,
+            endOffset: pointData['endX'] != null && pointData['endY'] != null
+                ? Offset(
+                    (pointData['endX'] as num).toDouble(),
+                    (pointData['endY'] as num).toDouble(),
+                  )
+                : null,
+          ));
+        }
       });
     });
 
-    // Listen to clear canvas events
-    _sessionRef.child('clear').onValue.listen((event) {
-      if (event.snapshot.value == true) {
-        setState(() {
-          drawingPoints.clear();
-          redoStack.clear();
-        });
-      }
+    // Listen for updates with value events to get full points array
+    _sessionRef.child('points').onValue.listen((event) {
+      if (!_isInitialized || event.snapshot.value == null) return;
+      
+      final List<dynamic> pointsData = event.snapshot.value as List;
+      
+      setState(() {
+        drawingPoints = pointsData.map((pointData) {
+          if (pointData == null || pointData['isSeparator'] == true) {
+            return null;
+          }
+
+          return DrawingPoint(
+            offset: Offset(
+              (pointData['x'] as num).toDouble(),
+              (pointData['y'] as num).toDouble(),
+            ),
+            paint: Paint()
+              ..color = Color(pointData['color'] as int)
+              ..strokeWidth = (pointData['strokeWidth'] as num).toDouble()
+              ..style = pointData['isFilled'] == true 
+                  ? PaintingStyle.fill 
+                  : PaintingStyle.stroke,
+            shape: pointData['shape'] as String?,
+            endOffset: pointData['endX'] != null && pointData['endY'] != null
+                ? Offset(
+                    (pointData['endX'] as num).toDouble(),
+                    (pointData['endY'] as num).toDouble(),
+                  )
+                : null,
+          );
+        }).toList();
+      });
     });
   }
 
-  void _syncPoint(DrawingPoint? point) {
-    if (!isDrawingAllowed) return;
-    
-    if (point == null) {
-      _sessionRef.child('points').push().set({
-        'isSeparator': true,
-        'timestamp': ServerValue.timestamp,
-      });
-      return;
-    }
-
-    final pointData = {
-      'x': point.offset.dx,
-      'y': point.offset.dy,
-      'color': point.paint.color.value,
-      'strokeWidth': point.paint.strokeWidth,
-      'isFilled': point.paint.style == PaintingStyle.fill,
-      'shape': point.shape,
-      'endX': point.endOffset?.dx,
-      'endY': point.endOffset?.dy,
-      'timestamp': ServerValue.timestamp,
-    };
-
-    _sessionRef.child('points').push().set(pointData);
-  }
-
+  // Update _syncDrawing method
   void _syncDrawing() {
     if (!isDrawingAllowed || widget.gameSession == null) return;
 
-    final pointsData = drawingPoints.map((point) {
-      if (point == null) return null;
-      return {
+    // Cancel any pending sync
+    _syncTimer?.cancel();
+
+    // Start new timer for batching
+    _syncTimer = Timer(syncInterval, () {
+      if (_pointsBatch.isEmpty) return;
+
+      // Convert current drawingPoints to data format
+      final List<Map<String, dynamic>> pointsData = drawingPoints.map((point) {
+        if (point == null) return {'isSeparator': true};
+        return {
+          'x': point.offset.dx,
+          'y': point.offset.dy,
+          'color': point.paint.color.value,
+          'strokeWidth': point.paint.strokeWidth,
+          'isFilled': point.paint.style == PaintingStyle.fill,
+          'shape': point.shape,
+          'endX': point.endOffset?.dx,
+          'endY': point.endOffset?.dy,
+        };
+      }).toList();
+
+      // Update the entire points array
+      _sessionRef.update({
+        'points': pointsData,
+        'timestamp': ServerValue.timestamp,
+      });
+
+      _pointsBatch.clear();
+    });
+  }
+
+  // Update _syncPoint method
+  void _syncPoint(DrawingPoint? point) {
+    if (!isDrawingAllowed) return;
+    
+    // Just add to local points array, _syncDrawing will handle the sync
+    if (point == null) {
+      _pointsBatch.add({'isSeparator': true});
+    } else {
+      final pointData = {
         'x': point.offset.dx,
         'y': point.offset.dy,
         'color': point.paint.color.value,
@@ -423,12 +472,11 @@ class AdvancedDrawingCanvasState extends State<AdvancedDrawingCanvas>
         'endX': point.endOffset?.dx,
         'endY': point.endOffset?.dy,
       };
-    }).toList();
-
-    _sessionRef.set({
-      'points': pointsData,
-      'timestamp': ServerValue.timestamp,
-    });
+      _pointsBatch.add(pointData);
+    }
+    
+    // Trigger sync
+    _syncDrawing();
   }
 
   void clearCanvas() {
@@ -442,6 +490,7 @@ class AdvancedDrawingCanvasState extends State<AdvancedDrawingCanvas>
 
   @override
   void dispose() {
+    _syncTimer?.cancel();
     _menuAnimationController.dispose();
     super.dispose();
   }

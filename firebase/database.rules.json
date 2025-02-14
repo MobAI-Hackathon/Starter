@@ -1,0 +1,66 @@
+{
+  "rules": {
+    "game_sessions": {
+      ".read": true,
+      // Allow write without auth temporarily for testing
+      ".write": true,
+      
+      "$gameId": {
+        ".read": true,
+        ".write": true,
+        // Simplify validation for initial game creation
+        ".validate": "newData.hasChild('players')",
+        
+        "players": {
+          ".indexOn": ["id"],
+          // Remove validation temporarily
+          ".validate": true,
+          "$playerId": {
+            ".validate": true
+          }
+        },
+        
+        "drawing_data": {
+          ".read": true,
+          ".write": true,
+          
+          "points": {
+            ".validate": true
+          },
+          
+          "timestamp": {
+            ".validate": true
+          }
+        },
+        
+        "state": {
+          ".validate": true
+        },
+        
+        "currentWord": {
+          ".read": true,
+          ".write": true
+        },
+        
+        "roundStartTime": {
+          ".validate": true
+        }
+      }
+    },
+    
+    "game_chats": {
+      "$gameId": {
+        ".read": true,
+        ".write": true,
+        ".indexOn": ["timestamp"]
+      }
+    },
+    
+    "drawing_sessions": {
+      "$sessionId": {
+        ".read": true,
+        ".write": true
+      }
+    }
+  }
+}

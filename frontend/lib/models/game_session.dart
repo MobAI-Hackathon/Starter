@@ -39,6 +39,7 @@ class GameSession {
   int currentRound;
   int maxRounds;
   DateTime? roundStartTime;
+  List<String> playersGuessedCorrect;
 
   GameSession({
     required this.id,
@@ -49,6 +50,7 @@ class GameSession {
     this.currentRound = 0,
     this.maxRounds = 3,
     this.roundStartTime,
+    this.playersGuessedCorrect = const [],
   });
 
   Map<String, dynamic> toJson() => {
@@ -60,6 +62,7 @@ class GameSession {
     'currentRound': currentRound,
     'maxRounds': maxRounds,
     'roundStartTime': roundStartTime?.millisecondsSinceEpoch,
+    'playersGuessedCorrect': playersGuessedCorrect,
   };
 
   factory GameSession.fromJson(Map<String, dynamic> json) => GameSession(
@@ -78,6 +81,9 @@ class GameSession {
     roundStartTime: json['roundStartTime'] != null
         ? DateTime.fromMillisecondsSinceEpoch(json['roundStartTime'])
         : null,
+    playersGuessedCorrect: json['playersGuessedCorrect'] != null
+        ? List<String>.from(json['playersGuessedCorrect'])
+        : [],
   );
 
   static Future<GameSession> create({

@@ -74,37 +74,42 @@ class GameService {
 
   Future<void> startNewRound(String gameId) async {
     final gameRef = _database.child('game_sessions').child(gameId);
-    
-    // First check if we have enough players (at least 2)
     final snapshot = await gameRef.get();
     if (!snapshot.exists) return;
     
     final game = GameSession.fromJson(Map<String, dynamic>.from(snapshot.value as Map));
-    if (game.players.length < 2) return;  // Don't start if not enough players
     
-    // Only proceed if we're in waiting state
-    if (game.state == GameState.waiting) {
+    // Check minimum players
+    if (game.players.length < 2) return;
+
+    // Set max rounds based on number of players
+    if (game.maxRounds != game.players.length) {
       await gameRef.update({
-        'state': GameState.starting.toString(),
+        'maxRounds': game.players.length,
       });
     }
-    
-    // Check if there's already a word set
-    final wordSnapshot = await gameRef.child('currentWord').get();
-    if (wordSnapshot.exists && wordSnapshot.value != null) {
+
+    // Check if we've reached the maximum rounds
+    if (game.currentRound >= game.players.length) {
+      await gameRef.update({
+        'state': GameState.gameOver.toString(),
+      });
       return;
     }
+
+    // Select new random word
+    final word = _words[Random().nextInt(_words.length)];
     
-    final word = _wordList[DateTime.now().millisecondsSinceEpoch % _wordList.length];
-    
+    // Update game state
     await gameRef.update({
       'currentWord': word,
       'state': GameState.drawing.toString(),
       'roundStartTime': ServerValue.timestamp,
+      'playersGuessedCorrect': [],
     });
 
     // Start round timer
-    Timer(const Duration(seconds: 80), () {
+    Timer(Duration(seconds: game.roundTime), () {
       endRound(gameId);
     });
   }
@@ -112,32 +117,44 @@ class GameService {
   Future<void> endRound(String gameId) async {
     final gameRef = _database.child('game_sessions').child(gameId);
     final snapshot = await gameRef.get();
-    
     if (!snapshot.exists) return;
     
     final game = GameSession.fromJson(
       Map<String, dynamic>.from(snapshot.value as Map));
     
-    if (game.currentRound >= game.maxRounds) {
+    // Increment round counter
+    final nextRound = game.currentRound + 1;
+    
+    // Check if game should end
+    if (nextRound >= game.players.length) {
       await gameRef.update({
         'state': GameState.gameOver.toString(),
+        'currentRound': nextRound,
       });
-    } else {
-      // Rotate drawer role
-      final currentDrawerIndex = 
-          game.players.indexWhere((p) => p.isDrawing);
-      final nextDrawerIndex = 
-          (currentDrawerIndex + 1) % game.players.length;
-      
-      game.players[currentDrawerIndex].isDrawing = false;
-      game.players[nextDrawerIndex].isDrawing = true;
-      
-      await gameRef.update({
-        'state': GameState.roundEnd.toString(),
-        'currentRound': game.currentRound + 1,
-        'players': game.players.map((p) => p.toJson()).toList(),
-      });
+      return;
     }
+    
+    // Rotate to next drawer
+    final currentDrawerIndex = game.players.indexWhere((p) => p.isDrawing);
+    final nextDrawerIndex = (currentDrawerIndex + 1) % game.players.length;
+    
+    game.players[currentDrawerIndex].isDrawing = false;
+    game.players[nextDrawerIndex].isDrawing = true;
+
+    // Update game state
+    await gameRef.update({
+      'state': GameState.waiting.toString(),
+      'currentRound': nextRound,
+      'players': game.players.map((p) => p.toJson()).toList(),
+      'currentWord': null,
+      'drawing_data': null,
+      'playersGuessedCorrect': [],
+    });
+
+    // Start new round after a short delay
+    Timer(const Duration(seconds: 3), () {
+      startNewRound(gameId);
+    });
   }
 
   Future<void> handleCorrectGuess(String gameId, String playerId) async {
@@ -153,24 +170,27 @@ class GameService {
     
     guessingPlayer.score += 5;  // Points for guessing
     drawingPlayer.score += 2;   // Points for drawing
-    
-    // Select new drawer and word
-    final currentDrawerIndex = game.players.indexWhere((p) => p.isDrawing);
-    game.players[currentDrawerIndex].isDrawing = false;
-    
-    final nextDrawerIndex = (currentDrawerIndex + 1) % game.players.length;
-    game.players[nextDrawerIndex].isDrawing = true;
-    
-    // Select new random word
-    final newWord = _words[Random().nextInt(_words.length)];
-    
-    // Update game state
+
+    // Add player to correct guesses list
+    List<String> correctGuesses = [];
+    final correctGuessesSnapshot = await gameRef.child('playersGuessedCorrect').get();
+    if (correctGuessesSnapshot.exists && correctGuessesSnapshot.value != null) {
+      correctGuesses = List<String>.from(correctGuessesSnapshot.value as List);
+    }
+    correctGuesses.add(playerId);
+
+    // Update player scores and correct guesses
     await gameRef.update({
       'players': game.players.map((p) => p.toJson()).toList(),
-      'currentWord': newWord,
-      'roundStartTime': ServerValue.timestamp,
-      'drawing_data': null, // Clear the previous drawing
+      'playersGuessedCorrect': correctGuesses,
     });
+
+    // Check if all non-drawing players have guessed correctly
+    final nonDrawingPlayers = game.players.where((p) => !p.isDrawing).length;
+    if (correctGuesses.length >= nonDrawingPlayers) {
+      // End round if everyone has guessed
+      await endRound(gameId);
+    }
   }
 
   Stream<List<GameSession>> getAvailableGames() {

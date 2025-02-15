@@ -224,7 +224,7 @@ class _LoginScreenState extends State<LoginScreen>
             await prefs.setBool('isLoggedIn', true);
 
             // Always navigate to profile screen
-            Navigator.of(context).pushReplacementNamed('/profile');
+            Navigator.of(context).pushReplacementNamed('/game_mode');
           } else {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(

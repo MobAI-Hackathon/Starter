@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:hanini_frontend/screens/game_room_screen.dart';
 import 'package:hanini_frontend/screens/navScreens/homepage.dart';
 import 'package:hanini_frontend/screens/navScreens/Online_mode.dart';
+import 'package:hanini_frontend/screens/scribble_lobby_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -40,7 +41,13 @@ class _GameModeScreenState extends State<GameModeScreen> {
             builder: (context) => ChallengeScreen(),
           ),
         );
-      }
+      } else if (mode == "Multi player"){        
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ScribbleLobbyScreen(),
+          ),
+        );}
     });
   }
 

@@ -115,12 +115,34 @@ class _SketchPredictionPageState extends State<SketchPredictionPage> {
       body: Column(
         children: [
           Expanded(
-            child: SimpleDrawingCanvas(
-              key: _canvasKey,
+            child: Container(
+              margin: const EdgeInsets.all(16.0),
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.grey),
+                borderRadius: BorderRadius.circular(12.0),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12.0),
+                child: SimpleDrawingCanvas(
+                  key: _canvasKey,
+                ),
+              ),
             ),
           ),
           Container(
             padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.grey.withOpacity(0.5),
+                  spreadRadius: 5,
+                  blurRadius: 7,
+                  offset: const Offset(0, 3),
+                ),
+              ],
+              borderRadius: BorderRadius.circular(12.0),
+            ),
             child: Column(
               children: [
                 if (_isLoading)
@@ -134,6 +156,13 @@ class _SketchPredictionPageState extends State<SketchPredictionPage> {
                 const SizedBox(height: 16),
                 ElevatedButton(
                   onPressed: _isLoading ? null : _getPrediction,
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 32.0, vertical: 12.0),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12.0),
+                    ),
+                  ),
                   child: const Text('Predict'),
                 ),
               ],

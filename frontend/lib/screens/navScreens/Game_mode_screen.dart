@@ -158,7 +158,17 @@ class _GameModeScreenState extends State<GameModeScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         backgroundColor: const Color(0xFF6A5EDE),
-        child: const Icon(Icons.create),
+        child: Container(
+          width: 56,
+          height: 56,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            image: DecorationImage(
+              image: AssetImage('assets/images/logo1.png'),
+              fit: BoxFit.cover,
+            ),
+          ),
+        ),
         onPressed: () {},
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,

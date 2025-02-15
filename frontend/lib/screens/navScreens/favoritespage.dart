@@ -33,22 +33,8 @@ class _GameModeScreenState extends State<GameModeScreen> {
   void selectMode(String mode) {
     setState(() {
       selectedMode = mode;
-      // Navigate immediately when Online is selected
-      if (mode == "Online") {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => ChallengeScreen(),
-          ),
-        );
-      } else if (mode == "Multi player"){        
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => ScribbleLobbyScreen(),
-          ),
-        );}
     });
+    // Remove any direct navigation from here
   }
 
   @override
@@ -97,30 +83,26 @@ class _GameModeScreenState extends State<GameModeScreen> {
                   padding: const EdgeInsets.only(bottom: 100),
                   child: ElevatedButton(
                     onPressed: () {
-                      // Navigate when Start is pressed
+                      // Only navigate when Start button is pressed
                       if (selectedMode == "Online") {
-                        Navigator.pushReplacement(
+                        Navigator.push(  // Changed from pushReplacement to push
                           context,
                           MaterialPageRoute(
                             builder: (context) => ChallengeScreen(),
                           ),
                         );
                       } else if (selectedMode == "Offline") {
-                        Navigator.pushReplacement(
+                        Navigator.push(  // Changed from pushReplacement to push
                           context,
                           MaterialPageRoute(
-                            builder: (context) => const SketchPredictionPage(),
+                            builder: (context) => SketchPredictionPage(),
                           ),
                         );
                       } else if (selectedMode == "Multi player") {
-                        Navigator.pushReplacement(
+                        Navigator.push(  // Changed from pushReplacement to push
                           context,
                           MaterialPageRoute(
-                            builder: (context) => const GameRoomScreen(
-                              userName: '',
-                              gameId: '',
-                              userId: '',
-                            ),
+                            builder: (context) => ScribbleLobbyScreen(),
                           ),
                         );
                       }
@@ -174,7 +156,7 @@ class _GameModeScreenState extends State<GameModeScreen> {
 
   Widget _buildModeButton(String mode, IconData icon, bool isSelected) {
     return GestureDetector(
-      onTap: () => selectMode(mode),
+      onTap: () => selectMode(mode),  // This now only updates the selection
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 300),
         width: isSelected ? 110 : 80,

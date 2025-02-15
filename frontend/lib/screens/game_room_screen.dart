@@ -123,7 +123,7 @@ class _GameRoomScreenState extends State<GameRoomScreen> with SingleTickerProvid
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
-                colors: [Colors.deepPurple.shade900, Colors.purple.shade600],
+                colors: [const Color.fromARGB(255, 39, 28, 85), const Color.fromARGB(255, 96, 30, 144)],
               ),
             ),
           ),
@@ -217,7 +217,7 @@ class _GameRoomScreenState extends State<GameRoomScreen> with SingleTickerProvid
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [Colors.deepPurple.shade900, Colors.purple.shade600],
+            colors: [const Color.fromARGB(255, 39, 28, 85), const Color.fromARGB(255, 96, 30, 144)],
           ),
         ),
         child: Center(
@@ -338,7 +338,7 @@ class _GameRoomScreenState extends State<GameRoomScreen> with SingleTickerProvid
       );
     }
 
-    // Main game content
+ // Main game content
     return Stack(
       children: [
         Container(
@@ -494,6 +494,7 @@ class _GameRoomScreenState extends State<GameRoomScreen> with SingleTickerProvid
     );
   }
 
+
   Widget _buildPlayerTile(Player player) {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
@@ -589,37 +590,220 @@ class _GameRoomScreenState extends State<GameRoomScreen> with SingleTickerProvid
           
           // Now we can safely use session for the AppBar condition
           return Scaffold(
-            appBar: session.state == GameState.waiting ? null : AppBar(
-              title: const Text('Scribble Game'),
-            ),
             body: session.state == GameState.gameOver
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
+              ? Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [Colors.deepPurple.shade900, Colors.deepPurple.shade500],
+                    ),
+                  ),
+                  child: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                         Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  child: Row(
                     children: [
-                      const Text(
-                        'Game Over!',
-                        style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(height: 16),
-                      ...session.players
-                          .sorted((a, b) => b.score.compareTo(a.score))
-                          .map((player) => Text(
-                                '${player.name}: ${player.score} points',
-                                style: const TextStyle(fontSize: 18),
-                              )),
-                      const SizedBox(height: 16),
-                      ElevatedButton(
+                      IconButton(
+                        icon: const Icon(Icons.arrow_back, color: Colors.white),
                         onPressed: () => Navigator.of(context).pop(),
-                        child: const Text('Back to Lobby'),
+                      ),
+                      const Text(
+                        'Srible Game',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ],
+                  ),
+                ),
+                        const Text(
+                          'Game Over!',
+                          style: TextStyle(
+                            fontSize: 48,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                            shadows: [
+                              Shadow(
+                                color: Colors.black26,
+                                offset: Offset(2, 2),
+                                blurRadius: 4,
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 40),
+                        Stack(
+                          alignment: Alignment.bottomCenter,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                // Second Place
+                                if (session.players.length > 1) _buildPodiumSpot(
+                                  session.players.sorted((a, b) => b.score.compareTo(a.score))[1],
+                                  160,
+                                  Colors.grey.shade300,
+                                  '2nd',
+                                ),
+                                const SizedBox(width: 12),
+                                // First Place
+                                _buildPodiumSpot(
+                                  session.players.sorted((a, b) => b.score.compareTo(a.score))[0],
+                                  200,
+                                  Colors.amber,
+                                  '1st',
+                                ),
+                                const SizedBox(width: 12),
+                                // Third Place
+                                if (session.players.length > 2) _buildPodiumSpot(
+                                  session.players.sorted((a, b) => b.score.compareTo(a.score))[2],
+                                  120,
+                                  Colors.brown.shade300,
+                                  '3rd',
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 40),
+                        // Other players
+                        if (session.players.length > 3) ...[
+                          Container(
+                            margin: const EdgeInsets.symmetric(horizontal: 32),
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: Column(
+                              children: session.players
+                                  .sorted((a, b) => b.score.compareTo(a.score))
+                                  .skip(3)
+                                  .map((player) => Padding(
+                                    padding: const EdgeInsets.symmetric(vertical: 4),
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        Text(
+                                          '${session.players.sorted((a, b) => b.score.compareTo(a.score)).indexOf(player) + 1}. ',
+                                          style: const TextStyle(
+                                            color: Colors.white70,
+                                            fontSize: 16,
+                                          ),
+                                        ),
+                                        Text(
+                                          '${player.name}: ${player.score}',
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 16,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ))
+                                  .toList(),
+                            ),
+                          ),
+                        ],
+                        const SizedBox(height: 32),
+                        ElevatedButton(
+                          onPressed: () => Navigator.of(context).pop(),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(25),
+                            ),
+                          ),
+                          child: const Text(
+                            'Back to Lobby',
+                            style: TextStyle(
+                              color: Colors.deepPurple,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 )
               : _buildGameContent(session),
           );
         },
       ),
+    );
+  }
+
+  Widget _buildPodiumSpot(Player player, double height, Color color, String place) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.end,
+      children: [
+        CircleAvatar(
+          radius: place == '1st' ? 40 : 30,
+          backgroundImage: player.photoURL != null ? NetworkImage(player.photoURL!) : null,
+          backgroundColor: Colors.white,
+          child: player.photoURL == null
+              ? Text(
+                  player.name[0].toUpperCase(),
+                  style: TextStyle(
+                    fontSize: place == '1st' ? 24 : 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.deepPurple,
+                  ),
+                )
+              : null,
+        ),
+        const SizedBox(height: 8),
+        Text(
+          player.name,
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: place == '1st' ? 18 : 16,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        Text(
+          '${player.score} pts',
+          style: const TextStyle(
+            color: Colors.white70,
+            fontSize: 14,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Container(
+          width: 80,
+          height: height,
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.2),
+                blurRadius: 4,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Center(
+            child: Text(
+              place,
+              style: TextStyle(
+                color: place == '1st' ? Colors.black : Colors.black87,
+                fontSize: place == '1st' ? 24 : 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

@@ -27,6 +27,9 @@ class _GameRoomScreenState extends State<GameRoomScreen> with SingleTickerProvid
   late AnimationController _chatPanelController;
   late Animation<double> _chatPanelAnimation;
   bool _isChatVisible = false;
+  
+  // Add this map to track which players we've seen
+  final Set<String> _animatedPlayers = {};
 
   @override
   void initState() {
@@ -61,61 +64,276 @@ class _GameRoomScreenState extends State<GameRoomScreen> with SingleTickerProvid
     });
   }
 
+  Widget _buildPlayerAvatar(Player player, bool isNewPlayer) {
+    return TweenAnimationBuilder<double>(
+      duration: const Duration(milliseconds: 600),
+      curve: Curves.easeOut, // Changed from elasticOut to prevent overshooting
+      tween: Tween<double>(
+        begin: isNewPlayer ? 0.0 : 1.0,
+        end: 1.0,
+      ),
+      onEnd: () {
+        _animatedPlayers.add(player.id);
+      },
+      builder: (context, value, child) {
+        return Transform.scale(
+          scale: value.clamp(0.0, 1.0), // Clamp scale value
+          child: Opacity(
+            opacity: value.clamp(0.0, 1.0), // Clamp opacity value
+            child: Column(
+              children: [
+                CircleAvatar(
+                  radius: player.id == widget.userId ? 40 : 30,
+                  backgroundImage: player.photoURL != null ? NetworkImage(player.photoURL!) : null,
+                  backgroundColor: Colors.white,
+                  child: player.photoURL == null ? Text(
+                    player.name[0].toUpperCase(),
+                    style: TextStyle(
+                      fontSize: player.id == widget.userId ? 24 : 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.deepPurple,
+                    ),
+                  ) : null,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  player.name,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   Widget _buildGameContent(GameSession session) {
     final currentPlayer = session.players.firstWhere((p) => p.id == widget.userId);
 
-    // Show waiting screen only during initial waiting state
-    if (session.state == GameState.waiting && session.players.length < 2) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Text(
-              'Waiting for more players...',
-              style: TextStyle(fontSize: 24),
+    // Show waiting screen
+    if (session.state == GameState.waiting) {
+      return Stack(
+        children: [
+          Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [Colors.deepPurple.shade900, Colors.purple.shade600],
+              ),
             ),
-            const SizedBox(height: 16),
-            Text('${session.players.length}/3 players'),
-          ],
-        ),
-      );
-    }
-
-    // Show ready to start screen
-    if (session.state == GameState.waiting && session.players.length >= 2) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Text(
-              'Ready to start!',
-              style: TextStyle(fontSize: 24),
+          ),
+          SafeArea(
+            child: Column(
+              children: [
+                // Custom App Bar for waiting room
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  child: Row(
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.arrow_back, color: Colors.white),
+                        onPressed: () => Navigator.of(context).pop(),
+                      ),
+                      const Text(
+                        'Waiting Room',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          '${session.players.length} players are in the waiting room',
+                          style: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white
+                          ),
+                        ),
+                        const SizedBox(height: 40),
+                        Wrap(
+                          alignment: WrapAlignment.center,
+                          spacing: 24,  // Increased spacing
+                          runSpacing: 24,  // Increased spacing
+                          children: session.players.map((player) {
+                            final isNewPlayer = !_animatedPlayers.contains(player.id);
+                            return _buildPlayerAvatar(player, isNewPlayer);
+                          }).toList(),
+                        ),
+                        const SizedBox(height: 48),
+                        ElevatedButton(
+                          onPressed: session.players.length >= 2 
+                            ? () => _gameService.startGame(widget.gameId)
+                            : null,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.white,
+                            foregroundColor: Colors.deepPurple,
+                            disabledBackgroundColor: Colors.white.withOpacity(0.3),
+                            disabledForegroundColor: Colors.white.withOpacity(0.5),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 48,
+                              vertical: 16
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16)
+                            ),
+                          ),
+                          child: Text(
+                            session.players.length >= 2 ? 'START GAME' : 'WAITING FOR PLAYERS',
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 16),
-            Text('${session.players.length}/3 players'),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: () => _gameService.startGame(widget.gameId),
-              child: const Text('Start Game'),
-            ),
-          ],
-        ),
+          ),
+        ],
       );
     }
 
     // Show round transition screen
     if (session.state == GameState.roundEnd) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Text(
-              'Round Complete!',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
-            const Text('Next round starting soon...'),
-          ],
+      return Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Colors.deepPurple.shade900, Colors.purple.shade600],
+          ),
+        ),
+        child: Center(
+          child: TweenAnimationBuilder<double>(
+            duration: const Duration(milliseconds: 800),
+            tween: Tween(begin: 0.0, end: 1.0),
+            builder: (context, value, child) {
+              return Opacity(
+                opacity: value,
+                child: Transform.scale(
+                  scale: 0.8 + (0.2 * value),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(
+                        Icons.check_circle_outline,
+                        size: 80,
+                        color: Colors.white,
+                      ),
+                      const SizedBox(height: 24),
+                      const Text(
+                        'Round Complete!',
+                        style: TextStyle(
+                          fontSize: 32,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Next round starting soon...',
+                        style: TextStyle(
+                          fontSize: 18,
+                          color: Colors.white.withOpacity(0.8),
+                        ),
+                      ),
+                      const SizedBox(height: 32),
+                      SizedBox(
+                        width: 100,
+                        height: 100,
+                        child: CircularProgressIndicator(
+                          value: value,
+                          backgroundColor: Colors.white24,
+                          color: Colors.white,
+                          strokeWidth: 8,
+                        ),
+                      ),
+                      const SizedBox(height: 40),
+                      Wrap(
+                        spacing: 16,
+                        runSpacing: 16,
+                        alignment: WrapAlignment.center,
+                        children: session.players.map((player) {
+                          final isNextDrawer = session.players.indexOf(player) == 
+                              (session.players.indexWhere((p) => p.isDrawing) + 1) % session.players.length;
+                          return Column(
+                            children: [
+                              Stack(
+                                children: [
+                                  CircleAvatar(
+                                    radius: isNextDrawer ? 35 : 30,
+                                    backgroundImage: player.photoURL != null ? NetworkImage(player.photoURL!) : null,
+                                    backgroundColor: isNextDrawer ? Colors.white : Colors.white60,
+                                    child: player.photoURL == null ? Text(
+                                      player.name[0].toUpperCase(),
+                                      style: TextStyle(
+                                        fontSize: isNextDrawer ? 24 : 20,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.deepPurple,
+                                      ),
+                                    ) : null,
+                                  ),
+                                  if (isNextDrawer)
+                                    Positioned(
+                                      bottom: 0,
+                                      right: 0,
+                                      child: Container(
+                                        padding: const EdgeInsets.all(4),
+                                        decoration: const BoxDecoration(
+                                          color: Colors.white,
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: const Icon(
+                                          Icons.brush,
+                                          color: Colors.deepPurple,
+                                          size: 20,
+                                        ),
+                                      ),
+                                    ),
+                                ],
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                player.name,
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: isNextDrawer ? FontWeight.bold : FontWeight.normal,
+                                ),
+                              ),
+                              Text(
+                                '${player.score} pts',
+                                style: TextStyle(
+                                  color: Colors.white.withOpacity(0.7),
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          );
+                        }).toList(),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
         ),
       );
     }
@@ -277,12 +495,21 @@ class _GameRoomScreenState extends State<GameRoomScreen> with SingleTickerProvid
   }
 
   Widget _buildPlayerTile(Player player) {
-    return Container(
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
       padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
       margin: const EdgeInsets.only(bottom: 4),
       decoration: BoxDecoration(
         color: player.isDrawing ? Colors.deepPurple.shade100 : Colors.white,
         borderRadius: BorderRadius.circular(8),
+        boxShadow: player.isDrawing ? [
+          BoxShadow(
+            color: Colors.deepPurple.withOpacity(0.2),
+            blurRadius: 4,
+            spreadRadius: 1,
+          )
+        ] : null,
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -290,10 +517,36 @@ class _GameRoomScreenState extends State<GameRoomScreen> with SingleTickerProvid
           Row(
             children: [
               if (player.isDrawing)
-                const Padding(
-                  padding: EdgeInsets.only(right: 8),
-                  child: Icon(Icons.brush, color: Colors.deepPurple, size: 16),
+                TweenAnimationBuilder<double>(
+                  duration: const Duration(milliseconds: 500),
+                  curve: Curves.easeOut, // Changed from default to prevent overshooting
+                  tween: Tween<double>(begin: 0, end: 1),
+                  builder: (context, value, child) {
+                    return Opacity(
+                      opacity: value.clamp(0.0, 1.0), // Clamp opacity value
+                      child: const Padding(
+                        padding: EdgeInsets.only(right: 8),
+                        child: Icon(Icons.brush, color: Colors.deepPurple, size: 16),
+                      ),
+                    );
+                  },
                 ),
+              CircleAvatar(
+                radius: 16,
+                backgroundImage: player.photoURL != null ? NetworkImage(player.photoURL!) : null,
+                backgroundColor: Colors.deepPurple.shade50,
+                child: player.photoURL == null 
+                    ? Text(
+                        player.name[0].toUpperCase(),
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.deepPurple,
+                        ),
+                      ) 
+                    : null,
+              ),
+              const SizedBox(width: 8),
               Text(
                 player.name,
                 style: TextStyle(
@@ -303,12 +556,18 @@ class _GameRoomScreenState extends State<GameRoomScreen> with SingleTickerProvid
               ),
             ],
           ),
-          Text(
-            player.score.toString(),
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              color: Colors.deepPurple,
-            ),
+          TweenAnimationBuilder<int>(
+            duration: const Duration(milliseconds: 500),
+            tween: IntTween(begin: 0, end: player.score),
+            builder: (context, value, child) {
+              return Text(
+                value.toString(),
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.deepPurple,
+                ),
+              );
+            },
           ),
         ],
       ),
@@ -318,42 +577,47 @@ class _GameRoomScreenState extends State<GameRoomScreen> with SingleTickerProvid
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Scribble Game')),
       body: StreamBuilder<GameSession>(
         stream: _gameStream,
         builder: (context, snapshot) {
+          // Show loading indicator while waiting for data
           if (!snapshot.hasData) {
             return const Center(child: CircularProgressIndicator());
           }
 
           final session = snapshot.data!;
-          if (session.state == GameState.gameOver) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Text(
-                    'Game Over!',
-                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+          
+          // Now we can safely use session for the AppBar condition
+          return Scaffold(
+            appBar: session.state == GameState.waiting ? null : AppBar(
+              title: const Text('Scribble Game'),
+            ),
+            body: session.state == GameState.gameOver
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Text(
+                        'Game Over!',
+                        style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 16),
+                      ...session.players
+                          .sorted((a, b) => b.score.compareTo(a.score))
+                          .map((player) => Text(
+                                '${player.name}: ${player.score} points',
+                                style: const TextStyle(fontSize: 18),
+                              )),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        child: const Text('Back to Lobby'),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 16),
-                  ...session.players
-                      .sorted((a, b) => b.score.compareTo(a.score))
-                      .map((player) => Text(
-                            '${player.name}: ${player.score} points',
-                            style: const TextStyle(fontSize: 18),
-                          )),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    child: const Text('Back to Lobby'),
-                  ),
-                ],
-              ),
-            );
-          }
-
-          return _buildGameContent(session);
+                )
+              : _buildGameContent(session),
+          );
         },
       ),
     );

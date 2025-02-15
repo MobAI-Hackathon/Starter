@@ -50,6 +50,7 @@ dependencies:
   noise_meter: ^5.0.2  # Updated from ^3.1.0
   firebase_database: ^11.3.2
   
+  
 dev_dependencies:
   flutter_test:
     sdk: flutter

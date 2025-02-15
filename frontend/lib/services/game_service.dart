@@ -1,15 +1,12 @@
 import 'dart:async';
-import 'package:firebase_database/firebase_database.dart';
+import 'package:firebase_database/firebase_database.dart' as rtdb;
 import '../models/game_session.dart';
 import 'dart:math';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class GameService {
-  final _database = FirebaseDatabase.instance.ref();
-  final _wordList = [
-    'apple', 'banana', 'cat', 'dog', 'elephant',
-    'flower', 'guitar', 'house', 'ice cream', 'jellyfish',
-    // Add more words as needed
-  ];
+  final _database = rtdb.FirebaseDatabase.instance.ref();
+
   final _words = [
     'cat', 'dog', 'house', 'tree', 'car', 'sun', 'moon', 'star',
     'book', 'phone', 'computer', 'pizza', 'flower', 'bird', 'fish',
@@ -38,7 +35,7 @@ class GameService {
     final gameRef = _database.child('game_sessions').child(gameId);
     
     await gameRef.runTransaction((Object? obj) {
-      if (obj == null) return Transaction.abort();
+      if (obj == null) return rtdb.Transaction.abort();
       
       final game = GameSession.fromJson(Map<String, dynamic>.from(obj as Map));
       
@@ -47,7 +44,7 @@ class GameService {
         throw Exception('Game is full');
       }
       
-      if (game.players.any((p) => p.id == player.id)) return Transaction.success(obj);
+      if (game.players.any((p) => p.id == player.id)) return rtdb.Transaction.success(obj);
       
       game.players.add(player);
 
@@ -56,7 +53,7 @@ class GameService {
         game.maxRounds = 3; // One round per player
       }
       
-      return Transaction.success(game.toJson());
+      return rtdb.Transaction.success(game.toJson());
     });
   }
 
@@ -116,7 +113,7 @@ class GameService {
     await gameRef.update({
       'currentWord': word,
       'state': GameState.drawing.toString(),
-      'roundStartTime': ServerValue.timestamp,
+      'roundStartTime': rtdb.ServerValue.timestamp,  // Add rtdb prefix
       'playersGuessedCorrect': [],
     });
     
@@ -261,5 +258,23 @@ class GameService {
       }
       return games;
     });
+  }
+
+  Future<Player> createPlayer(String userId, String userName) async {
+    // Fetch user data from Firestore
+    final userDoc = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(userId)
+        .get();
+    
+    final userData = userDoc.data();
+    
+    return Player(
+      id: userId,
+      name: userName,
+      photoURL: userData?['photoURL'] as String?,
+      score: 0,
+      isDrawing: false,
+    );
   }
 }

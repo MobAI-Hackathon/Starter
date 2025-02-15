@@ -5,12 +5,14 @@ enum GameState { waiting, starting, drawing, roundEnd, gameOver }
 class Player {
   final String id;
   final String name;
+  final String? photoURL;  // Add photoURL field
   int score;
   bool isDrawing;
 
   Player({
     required this.id,
     required this.name,
+    this.photoURL,  // Add photoURL parameter
     this.score = 0,
     this.isDrawing = false,
   });
@@ -18,6 +20,7 @@ class Player {
   Map<String, dynamic> toJson() => {
     'id': id,
     'name': name,
+    'photoURL': photoURL,  // Add photoURL to JSON
     'score': score,
     'isDrawing': isDrawing,
   };
@@ -25,6 +28,7 @@ class Player {
   factory Player.fromJson(Map<String, dynamic> json) => Player(
     id: json['id'],
     name: json['name'],
+    photoURL: json['photoURL'] as String?,  // Add photoURL from JSON
     score: json['score'] ?? 0,
     isDrawing: json['isDrawing'] ?? false,
   );

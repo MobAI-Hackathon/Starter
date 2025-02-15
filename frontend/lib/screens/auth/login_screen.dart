@@ -222,8 +222,9 @@ class _LoginScreenState extends State<LoginScreen>
 
             final prefs = await SharedPreferences.getInstance();
             await prefs.setBool('isLoggedIn', true);
-            Navigator.pushNamed(context,
-                '/game_mode'); // Changed from '/navbar' to '/game_mode'
+
+            // Always navigate to profile screen
+            Navigator.of(context).pushReplacementNamed('/profile');
           } else {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
@@ -513,17 +514,12 @@ class _LoginScreenState extends State<LoginScreen>
 
             await saveDeviceTokenToFirestore(user.uid);
 
-            // Navigate based on user status
-            final userDoc = await FirebaseFirestore.instance
-                .collection('users')
-                .doc(user.uid)
-                .get();
+            // Set logged in state
+            final prefs = await SharedPreferences.getInstance();
+            await prefs.setBool('isLoggedIn', true);
 
-            if (userDoc.exists && userDoc.data()?['isNotFirst'] == false) {
-              final prefs = await SharedPreferences.getInstance();
-              await prefs.setBool('isLoggedIn', true);
-              Navigator.pushNamed(context, '/game_mode');
-            }
+            // Always navigate to profile screen
+            Navigator.of(context).pushReplacementNamed('/profile');
           } catch (e) {
             debugPrint('Error during data initialization: $e');
             ScaffoldMessenger.of(context).showSnackBar(

@@ -6,7 +6,8 @@ import 'package:hanini_frontend/screens/auth/forgot_password_screen.dart';
 import 'package:hanini_frontend/screens/auth/login_screen.dart';
 import 'package:hanini_frontend/screens/auth/signup_screen.dart';
 import 'package:hanini_frontend/screens/navScreens/Online_mode.dart';
-import 'package:hanini_frontend/screens/navScreens/favoritespage.dart';
+import 'package:hanini_frontend/screens/navScreens/Game_mode_screen.dart';
+import 'package:hanini_frontend/screens/navScreens/Profile_screen.dart';
 import 'package:hanini_frontend/screens/onboarding/onboarding_screen.dart';
 import 'localization/app_localization.dart';
 import 'package:flutter/services.dart';
@@ -38,11 +39,11 @@ Future<String> _determineInitialRoute() async {
 
   if (isFirstLaunch) {
     await prefs.setBool('isFirstLaunch', false);
-    return '/';
+    return '/signup';
   }
 
   if (isLoggedIn) {
-    return '/game_mode'; // Updated to match the new route name
+    return '/profile'; // Changed from '/game_mode' to '/profile'
   }
   return '/login';
 }
@@ -105,11 +106,13 @@ class _MyAppState extends State<MyApp> {
     return {
       '/': (context) => OnboardingScreen(),
       '/login': (context) => const LoginScreen(),
-      '/signup': (context) =>  SignInScreen(),
+      '/signup': (context) => SignInScreen(),
       '/game_mode': (context) => const GameModeScreen(), // Updated route name
       '/settings': (context) => SettingsScreen(),
       '/forgot_password': (context) => ForgotPasswordScreen(),
-      '/online_mode': (context) =>  ChallengeScreen(), // New route
+      '/online_mode': (context) => ChallengeScreen(), // New route
+      '/profile': (context) =>
+          ProfileScreen(), // Make sure this matches the class name exactly
     };
   }
 }

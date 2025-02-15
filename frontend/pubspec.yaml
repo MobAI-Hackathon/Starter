@@ -64,11 +64,9 @@ flutter:
   assets:
     - assets/
     - assets/credentials/
-    - assets/services_icon/
     - assets/images/
     - assets/images/ads/
     - assets/animation/
-    - assets/search_icons/
     - assets/animation/voice_wave.json
     - assets/animation/voice_wave2.json
     - assets/animation/processing.json

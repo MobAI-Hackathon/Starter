@@ -1,6 +1,6 @@
 # Drawzy Frontend
 
-A Flutter-based mobile application frontend providing a modern and responsive user interface.
+A Flutter-based mobile application frontend providing a modern and responsive user interface, utilizing Firebase Firestore and Realtime Database for data storage and synchronization.
 
 ## Table of Contents
 1. [Overview](#overview)
@@ -15,7 +15,7 @@ A Flutter-based mobile application frontend providing a modern and responsive us
 
 ## Overview
 
-This Flutter application serves as the frontend interface, supporting multiple platforms including iOS, Android, web, and desktop environments.
+This Flutter application serves as the frontend interface, supporting multiple platforms including iOS, Android, web, and desktop environments. It leverages Firebase Firestore and Realtime Database for efficient data management and real-time updates.
 
 ## Project Structure
 
@@ -56,6 +56,32 @@ frontend/
    ```bash
    flutter run
    ```
+
+## Firebase Integration
+
+### Firebase Setup
+1. Create a Firebase project in the [Firebase Console](https://console.firebase.google.com/).
+2. Register the app for Android, iOS, and Web.
+3. Download the `google-services.json` (for Android) and `GoogleService-Info.plist` (for iOS) and place them in the respective project folders.
+4. Add Firebase dependencies in `pubspec.yaml`:
+   ```yaml
+   dependencies:
+     firebase_core: latest_version
+     cloud_firestore: latest_version
+     firebase_database: latest_version
+   ```
+5. Initialize Firebase in your Flutter app:
+   ```dart
+   void main() async {
+     WidgetsFlutterBinding.ensureInitialized();
+     await Firebase.initializeApp();
+     runApp(MyApp());
+   }
+   ```
+
+### Firestore & Realtime Database Usage
+- **Firestore** is used for structured and scalable document storage.
+- **Realtime Database** is used for real-time data synchronization, such as live game room updates and collaborative drawing.
 
 ## Usage
 
@@ -105,7 +131,7 @@ Each platform has its specific configuration in its respective directory.
 
 ## Sketch Prediction and Game Room Features
 
-This project includes innovative features for sketch prediction and game room management, enhancing the user experience with interactive and collaborative functionalities. Below are the key features related to sketch prediction and game rooms:
+This project includes innovative features for sketch prediction and game room management, leveraging Firebase for seamless real-time collaboration.
 
 ### Features
 
@@ -119,7 +145,7 @@ This project includes innovative features for sketch prediction and game room ma
 - **Room Creation**: Users can create game rooms with unique IDs.
 - **Room Joining**: Users can join existing game rooms using the room ID.
 - **Collaborative Drawing**: Multiple users can draw on the same canvas in a game room.
-- **Real-time Synchronization**: Drawings are synchronized in real-time across all users in the game room.
+- **Real-time Synchronization**: Drawings are synchronized in real-time across all users using Firebase Realtime Database.
 - **Session Management**: Manages drawing sessions, including start and end times, and participant tracking.
 - **Chat Functionality**: Integrated chat feature for users to communicate within the game room.
 - **Score Tracking**: Tracks and displays scores for drawing games, encouraging friendly competition.
@@ -132,7 +158,7 @@ This project includes innovative features for sketch prediction and game room ma
 
 #### `GameRoomManager`
 - Manages the creation, joining, and synchronization of game rooms.
-- Handles user sessions, drawing data, and real-time updates.
+- Handles user sessions, drawing data, and real-time updates in Firebase.
 
 #### `GameRoom`
 - A model representing a game room, including room ID, participants, and drawing data.
@@ -140,7 +166,7 @@ This project includes innovative features for sketch prediction and game room ma
 
 #### `ChatService`
 - Provides chat functionality within game rooms.
-- Manages sending and receiving messages in real-time.
+- Manages sending and receiving messages in real-time via Firebase Realtime Database.
 
 #### `ScoreTracker`
 - Tracks and updates scores for drawing games.
@@ -148,7 +174,7 @@ This project includes innovative features for sketch prediction and game room ma
 
 ## Drawing Features
 
-This project includes advanced drawing capabilities that allow users to create and interact with various shapes and freehand drawings. Below are the key features related to the drawing functionalities:
+This project includes advanced drawing capabilities that allow users to create and interact with various shapes and freehand drawings.
 
 ### Features
 
@@ -184,8 +210,7 @@ This project includes advanced drawing capabilities that allow users to create a
 - The selected color is applied to both freehand and shape drawings.
 
 #### Drawing Synchronization
-- Drawings are synchronized in real-time for collaborative sessions.
-- The drawing data is stored and updated in a Firebase database.
+- Drawings are synchronized in real-time for collaborative sessions using Firebase Realtime Database.
 
 #### Drawing Preview
 - While drawing shapes, a preview of the shape is shown to the user before finalizing the drawing.
@@ -200,12 +225,6 @@ This project includes advanced drawing capabilities that allow users to create a
 - The main widget for advanced drawing features.
 - Supports freehand drawing, shape drawing, erasing, and real-time synchronization.
 
-#### `SimpleDrawingCanvas`
-- A simplified version of the drawing canvas with basic drawing functionalities.
-
 #### `DrawingPoint`
 - A model representing a point in the drawing, including its position, paint properties, and shape information.
-
-#### `SerializableDrawingPoint`
-- A serializable version of `DrawingPoint` for storing and retrieving drawing data from the database.
 
